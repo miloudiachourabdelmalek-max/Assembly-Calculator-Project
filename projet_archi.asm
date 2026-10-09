@@ -1,3 +1,4 @@
+
 data segment  
 ;declaration de donnees 
 
@@ -16,11 +17,11 @@ a dw ?
 b dw ?
 op db ?
 ba db ? 
-s dw ?
-dis dw 10
+s dw 2 dup (?)
+base1 dw ?
 divv1 db 'the quotion :', 13 , 10 , '$' 
 divv2 db 'the reminder :', 13 , 10 , '$'
-
+divby0 db 'dividing by 0, enter agin:', 13 , 10 , '$'
 
 ends 
 
@@ -90,25 +91,18 @@ int 21h
 
 
 cmp al, 'b'
-je cmp2
+je enterba
 cmp al, 'd'
-je cmp2
+je enterba
 cmp al, 'h'
 jne base
 
- 
-cmp2:
-  
+enterba:
 mov [ba], al
-cmp [ba], 'd'
-je enter10
-cmp [ba], 'b'
-je enter2
 
 
 
-
-enter10:
+enter:
 
 
 mov dx, offset nl
@@ -118,26 +112,53 @@ int 21h
 push offset m2
 call print
  
-mov as[0], 5 
+mov as[0], 16 
 mov dx, offset as
 mov ah, 0Ah
 int 21h
 
 mov bp, dx
-
+cmp [ba], 'd'
+jne comp2
 call EstDecimal
+jmp cmpf
 
+comp2:
+cmp [ba],'b'
+jne comp16
+call EstBinaire
+jmp cmpf 
+
+comp16:
+call EstHexa
+
+cmpf:
 cmp bx, 0
-je enter10 
+je enter 
 
-push offset as
-call StringToDecimal 
+mov dx, offset as
+call stringtonumber
+
+cmp [op], '/'
+jne moving
+cmp ax, 0
+jne moving
+
+mov dx, offset nl
+mov ah, 09h
+int 21h
+
+push offset divby0
+call print
+jmp enter
+
+moving: 
 mov [a], ax
  
 
 
 
-2enter10:
+enter2:
 
 mov dx, offset nl
 mov ah, 09h
@@ -145,23 +166,40 @@ int 21h
 
 push offset m3
 call print
-
-  
-
-mov bs[0], 5 
+ 
+mov bs[0], 16 
 mov dx, offset bs
 mov ah, 0Ah
 int 21h
 
 mov bp, dx
-call EstDecimal      
-      
-cmp bx, 0
-je 2enter10      
 
-push offset bs
-call StringToDecimal
-mov [b], ax 
+cmp [ba], 'd'
+jne comp22
+call EstDecimal
+jmp cmpf2
+
+comp22:
+cmp [ba],'b'
+jne comp216
+call EstBinaire
+jmp cmpf2 
+
+comp216:
+call EstHexa
+
+cmpf2:
+cmp bx, 0
+je 2enter 
+
+mov dx, offset bs
+call stringtonumber 
+mov [b], bx
+
+
+
+
+ 
 
 cmp [op], '+'
 je add10
@@ -172,8 +210,8 @@ jmp divv10
 
 add10:
 add ax, a
-mov [s], ax
 jo ovf
+mov [s], ax
 
 
 mov dx, offset nl
@@ -190,10 +228,12 @@ jmp endd
 
 mul10:
 
+mov dx, 0
 mul [a]
 jo ovf
 mov [s], ax
-jo ovf
+mov [s+2], dx
+
 
 
 mov dx, offset nl
@@ -204,6 +244,9 @@ mov dx, offset rslt
 int 21h
 
 mov ax, [s]
+call disp
+
+mov ax, [s+2]
 call disp
 jmp endd
 
@@ -242,6 +285,11 @@ jmp endd
 
 
 ovf:
+
+mov dx, offset nl
+mov ah, 09h
+int 21h
+
 mov dx, offset ov
 mov ah, 09H
 int 21h
@@ -251,150 +299,6 @@ jmp endd
  
  
  
-enter2: 
- 
-
-
-
-
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-push offset m2
-call print
-
-  
-
-mov as[0], 16 
-mov dx, offset as
-mov ah, 0Ah
-int 21h
-
-mov bp, dx
-call EstBinaire      
-      
-cmp bx, 0
-je enter2      
-
-
-mov bx, offset as
-call StringToBinary
-mov [a], ax 
- 
- 
- 
- 
-2enter2:
-
-
-
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-push offset m3
-call print
-
-  
-
-mov bs[0], 16 
-mov dx, offset bs
-mov ah, 0Ah
-int 21h
-
-mov bp, dx
-call EstBinaire      
-      
-cmp bx, 0
-je 2enter2      
-
-
-mov bx, offset bs
-call StringToBinary
-mov [b], ax
-
-
-cmp [op], '+'
-je add2
-cmp [op], '*'
-je mul2
-jmp div2
-
-
-
-add2:
-add ax,[a]
-jo ovf
-mov [s], ax 
-
- 
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-mov dx, offset rslt
-int 21h
-
-mov ax, [s]
-call disp
-jmp endd
-
-
-
-mul2:
-
-mul [a]
-jo ovf
-
-mov [s], ax 
-
- 
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-mov dx, offset rslt
-int 21h
-
-mov ax, [s]
-call disp
-jmp endd
-
-
-
-div2:
-
-
-
-
-mov dx,0
-
-div [a] 
-mov [s], ax
-mov di, dx
-
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-mov dx, offset divv1
-int 21h
-
-mov ax, [s]
-call disp
-
-
-mov dx, offset nl
-mov ah, 09h
-int 21h
-
-mov dx, offset divv2
-int 21h
-
-mov ax, di
-call disp
-jmp endd
 
 
 
@@ -413,7 +317,11 @@ mov ah,4Ch
 int 21h  
 
 
-;procedures
+
+
+
+
+
 
 
 
@@ -441,27 +349,40 @@ xor cx, cx
 
 cmp [ba], 'd'
 jne mv2
-
 mov bx, 10
-jmp nextdiv
+jmp nextdiv2
 
 mv2:
+cmp [ba], 'b'
+jne mv16
 mov bx, 2
+jmp nextdiv2
+
+mv16:
+mov bx, 16
 
 
-nextdiv:
+nextdiv2:
 xor dx, dx   
 div bx
-   
+cmp dx, 9
+jg add16
+ 
+1add10:   
 add dx, '0'
 push dx
 inc cx
 cmp ax, 0
-jnz nextdiv
+jnz nextdiv2
+jmp print2
 
-
-
-print2:
+add16:
+add dx, 55
+push dx
+inc cx
+cmp ax, 0
+jnz nextdiv2
+print2:   
 
 pop dx
 mov ah, 02h
@@ -479,7 +400,34 @@ disp endp
 
 
 
+EstHexa PROC
+MOV BL, 1 
+MOV SI, 1
+MOV CX, 0
+MOV CL, DS:[bp+1] 
+ADD CX, 1 
+RebouclerHex:
+INC SI 
+CMP SI, CX
+JG FinHex 
+CMP DS:[bp+SI], '0' 
+JL SortirHex 
 
+CMP DS:[bp+SI], '9'  
+JLE RebouclerHex 
+
+
+CMP DS:[bp+SI], 'A'  
+JL SortirHex 
+
+CMP DS:[bp+SI], 'F' 
+JG SortirHex 
+JMP RebouclerHex 
+SortirHex:
+MOV BL, 0 
+FinHex:
+RET 
+EstHexa ENDP 
 
 
 
@@ -493,19 +441,17 @@ disp endp
 
 
 EstDecimal PROC    
-PUSH AX
-push CX
-push SI ; Sauvegarde du contexte
+ 
 MOV BL, 1
-MOV SI, 1; // ET c’est INC SI qui va le mettre à 2
+MOV SI, 1
 MOV CX, 0
 MOV CL, DS:[bp+1]
-ADD CX, 1 ;
+ADD CX, 1 
 Reboucler1:
 INC SI 
-CMP SI, CX; ////CMP SI, DString[1]+1 =fin
+CMP SI, CX
 JG Fin1 
-CMP DS:[bp+SI], '0' ; // On peut aussi le faire avec CMP DString[SI], 30H ;
+CMP DS:[bp+SI], '0' 
 JL Sortir
 CMP DS:[bp+SI], '9'
 JG Sortir
@@ -513,9 +459,7 @@ JMP Reboucler1
 Sortir:
 MOV BL, 0 
 Fin1:
-POP SI
-pop CX
-pop AX
+
 RET 
 EstDecimal ENDP
 
@@ -524,61 +468,64 @@ EstDecimal ENDP
 
 
 
-
-StringToDecimal PROC
+stringtonumber PROC
+    
+     
+      
+      
         mov bx, dx
         mov ax, 0          
         mov cl, [bx+1]
-        MOV ch,0    ;cx=la taille reel
+        MOV ch,0   
         mov si, 2
+        
+cmp [ba],'d'
+jne etic1
+mov base1, 10
+jmp boucle2
+
+etic1:
+cmp [ba],'b'
+jne etic2
+mov base1, 2
+jmp boucle2
+
+etic2:
+mov base1, 16
+         
+        
         boucle2:
-            mul dis   ;ax=ax*10
-            mov dl, [bx+si] ;lecture des carac
+            mul base1
+            jo ovf   
+            mov dl, [bx+si] 
             add ax, dx
-            sub ax, 30h  ;convertir en nombre
+           
+            cmp dx, '9'
+            jg sub16
+            sub ax, 30h  
             inc si
+            jmp loopp
+            
+            sub16:
+            sub ax, 55
+            
+            inc si
+          
+            
+            
+            
+         loopp:   
         loop boucle2
         Fin4:
         ret
-    StringToDecimal ENDP 
+    stringtonumber ENDP 
 
 
-
-
-
-
-
-StringToBinary PROC    
-
-
-MOV AX, 0
-MOV BX, DX
-MOV CX, 0 
-MOV CL, [BX+1]
-inc cx  
-MOV SI, 1
-
-
-Reboucler2:
-INC SI 
-CMP SI, CX
-JG Fin3
-SHL AX, 1 
-CMP [BX+SI], '1'
-
-JNE Reboucler2 
-ADD AX, 1
-JMP Reboucler2
-Fin3:
-RET 
-StringToBinary ENDP 
 
 
 
 EstBinaire PROC
-PUSH AX 
-push CX
-push SI 
+ 
 MOV BL, 1
 MOV SI, 1
 MOV CX, 0
@@ -594,9 +541,7 @@ CMP ds:[bp+SI], '1'
 JE Reboucler
 MOV BL, 0
 Fin:
-POP SI
-pop CX
-pop AX
+
 RET 
 EstBinaire ENDP
 
