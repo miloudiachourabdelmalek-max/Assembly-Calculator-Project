@@ -1,58 +1,80 @@
-# 16-bit Assembly Calculator
+# 16-bit x86 Assembly Calculator
 
-A command-line calculator written in x86 Assembly for DOS, using BIOS/DOS-compatible software interrupts through `INT 21h`.
-
-The program allows the user to enter two numbers, select an arithmetic operation, and choose a number base for input and output.
+A command-line calculator developed in x86 Assembly for a DOS-compatible environment. The program allows users to perform arithmetic operations on numbers entered in different bases: binary, decimal, and hexadecimal.
 
 ## Features
 
-* **Arithmetic operations**
+### Arithmetic Operations
 
-  * Addition (`+`)
-  * Multiplication (`*`)
-  * Division (`/`), displaying both the quotient and remainder
+* **Addition (`+`)** — Adds two numbers.
+* **Multiplication (`*`)** — Multiplies two numbers and stores the result in a 32-bit variable.
+* **Division (`/`)** — Calculates and displays the quotient and remainder.
 
-* **Number bases**
+### Supported Number Bases
 
-  * Binary (`b`)
-  * Decimal (`d`)
-  * Hexadecimal (`h`) — presented in the menu but not yet implemented
+| Base        | Selection | Description                                                 |
+| ----------- | --------- | ----------------------------------------------------------- |
+| Binary      | `b`       | Base 2, using `0` and `1`                                   |
+| Decimal     | `d`       | Base 10, using digits `0`–`9`                               |
+| Hexadecimal | `h`       | Base 16, using digits `0`–`9` and uppercase letters `A`–`F` |
 
-* **Input validation**
+The selected base is used for input validation, number conversion, and result display.
 
-  * Checks that decimal input contains only digits.
-  * Checks that binary input contains only `0` and `1`.
-  * Requests new input when validation fails.
+### Input Validation
 
-* **Arithmetic error handling**
+The program includes dedicated procedures to validate user input:
 
-  * Includes signed overflow detection for selected arithmetic operations.
-  * Displays an error message when the overflow handler is triggered.
+* `EstBinaire` — Checks binary input.
+* `EstDecimal` — Checks decimal input.
+* `EstHexa` — Checks hexadecimal input.
+
+Invalid input causes the program to request another value.
+
+### Error Handling
+
+* Checks for division by zero before accepting the divisor.
+* Includes overflow detection for arithmetic and conversion operations.
+* Displays an error message when the overflow handler is triggered.
 
 ## Technologies and Concepts
 
+This project explores the following low-level programming concepts:
+
 * 16-bit x86 Assembly
-* DOS interrupts (`INT 21h`)
+* DOS interrupts using `INT 21h`
 * Registers and memory addressing
 * Data, code, and stack segments
 * Procedures and procedure calls
 * Stack operations (`PUSH`, `POP`, `CALL`, `RET`)
 * Conditional jumps and loops
 * Arithmetic instructions (`ADD`, `MUL`, `DIV`, `SHL`)
-* ASCII-to-integer conversion
-* Integer-to-ASCII output conversion
+* ASCII character validation and numeric conversion
+* Binary, decimal, and hexadecimal representations
+* Multiword arithmetic and result storage
+
+## Program Structure
+
+| Procedure        | Purpose                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `print`          | Displays a string using DOS interrupt `21h`, function `09h`.                  |
+| `disp`           | Converts a numeric value into the selected output base and displays it.       |
+| `EstDecimal`     | Validates decimal input.                                                      |
+| `EstBinaire`     | Validates binary input.                                                       |
+| `EstHexa`        | Validates uppercase hexadecimal input.                                        |
+| `stringtonumber` | Converts an input string into a numeric value according to the selected base. |
 
 ## How It Works
 
-1. The program asks the user to select an arithmetic operation.
-2. The user selects the number base.
+1. The user selects an arithmetic operation.
+2. The user chooses a number base.
 3. The program reads and validates the first number.
-4. The program reads and validates the second number.
-5. The input strings are converted into integer values.
-6. The selected arithmetic operation is executed.
-7. The result is converted into the selected output base and displayed.
+4. The first input is converted into an integer.
+5. The program reads and validates the second number.
+6. The second input is converted into an integer.
+7. The selected arithmetic operation is performed.
+8. The result is converted into the selected base and displayed.
 
-For division, the program displays the quotient and remainder separately.
+For division, the quotient and remainder are displayed separately.
 
 ## Example
 
@@ -63,41 +85,37 @@ enter the operation: "+" for addition, "*" for multiplication, "/" for division
 
 enter your base: "b" for binary, "d" for decimal, "h" for hexadecimal
 
-d
+h
 
 enter the first number:
-12
+A
 
 enter the second number:
 5
 
 your result is:
-17
+F
 ```
 
-For division, the program displays both the quotient and the remainder.
+This example illustrates the intended hexadecimal behavior: `A` (10) plus `5` equals `F` (15).
 
 ## Limitations
 
-* Hexadecimal input and output are not implemented yet.
+* Hexadecimal input currently accepts uppercase letters `A`–`F`.
 * Negative-number input is not supported.
-* The program uses 16-bit registers, which limit the range of representable results.
-* Overflow detection and division-by-zero handling need further improvement.
-* Input length and numeric range checks should be strengthened.
+* The program uses 16-bit registers for its main arithmetic operations.
+* Multiplication result storage uses 32 bits, but displaying the complete 32-bit result requires additional handling.
+* Overflow detection and conversion routines require further testing to ensure correctness.
 
-## Learning Objectives
+## Possible Improvements
 
-This project explores low-level programming concepts, including register manipulation, memory organization, procedure calls, stack management, numeric representation, input validation, and arithmetic operations.
-
-## Future Improvements
-
-* Implement hexadecimal input and output.
-* Improve overflow detection for signed and unsigned arithmetic.
-* Add division-by-zero handling.
-* Support negative numbers.
-* Refactor repeated arithmetic code into reusable procedures.
-* Improve input range validation and error messages.
+* Support lowercase hexadecimal digits.
+* Improve signed and unsigned overflow handling.
+* Implement complete 32-bit result conversion and display.
+* Strengthen numeric range validation.
+* Refactor repeated code into reusable procedures.
+* Improve error messages and input handling.
 
 ## Author
 
-Developed as an educational project to practice 16-bit x86 Assembly programming.
+Developed as an educational project to practice x86 Assembly, low-level arithmetic, memory management, procedures, and number-system conversions.
