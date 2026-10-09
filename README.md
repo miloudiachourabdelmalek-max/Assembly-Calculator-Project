@@ -1,4 +1,4 @@
-# 16-bit x86 Assembly Calculator for Uni project (hand typing)
+# 16-bit x86 Assembly Calculator for Uni project (self coded)
 
 A command-line calculator developed in x86 Assembly for a DOS-compatible environment. The program allows users to perform arithmetic operations on numbers entered in different bases: binary, decimal, and hexadecimal.
 
